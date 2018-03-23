@@ -39,7 +39,7 @@ var _ = Describe("Main", func() {
 			envs = []string{"PORT=" + port}
 		})
 
-		It("reports that the server has started on the correct port", func() {
+		It("logs that the server is about to start on a specific port", func() {
 			Eventually(session).Should(Say("About to listen on port " + port))
 		})
 
