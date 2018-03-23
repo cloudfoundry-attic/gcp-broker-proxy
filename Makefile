@@ -7,7 +7,7 @@ build:
 	go build -o $(BINARY_NAME) -v
 
 test:
-	ginkgo .
+	ginkgo . -p
 
 clean:
 	go clean
@@ -19,4 +19,3 @@ run: build
 
 build-linux:
 				CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(BINARY_LINUX) -v
-

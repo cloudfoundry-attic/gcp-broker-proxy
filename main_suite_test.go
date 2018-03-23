@@ -16,9 +16,10 @@ func TestGcpBrokerProxy(t *testing.T) {
 var gcpBrokerProxyBinary string
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	var err error
-	gcpBrokerProxyBinary, err = gexec.Build("code.cloudfoundry.org/gcp-broker-proxy")
+	binaryPath, err := gexec.Build("code.cloudfoundry.org/gcp-broker-proxy")
 	Expect(err).NotTo(HaveOccurred())
-	return nil
-}, func(_ []byte) {
+
+	return []byte(binaryPath)
+}, func(binaryPath []byte) {
+	gcpBrokerProxyBinary = string(binaryPath)
 })
