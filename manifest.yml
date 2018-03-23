@@ -1,0 +1,6 @@
+---
+applications:
+  - name: gcp-proxy-broker
+    memory: 64M
+    instances: 1
+    buildpack: binary_buildpack
