@@ -13,7 +13,7 @@ import (
 	_ "code.cloudfoundry.org/gcp-broker-proxy"
 )
 
-var _ = Describe("Main", func() {
+var _ = Describe("GCP Broker Proxy", func() {
 	var (
 		session *gexec.Session
 		port    string
