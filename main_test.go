@@ -17,16 +17,14 @@ var _ = Describe("Main", func() {
 	var (
 		session *gexec.Session
 		port    string
+		envs    []string
 	)
 
-	BeforeEach(func() {
+	JustBeforeEach(func() {
 		var err error
 
-		port = strconv.Itoa(8081 + config.GinkgoConfig.ParallelNode)
 		cmd := exec.Command(gcpBrokerProxyBinary)
-
-		cmd.Env = []string{"PORT=" + port}
-
+		cmd.Env = envs
 		session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -36,12 +34,27 @@ var _ = Describe("Main", func() {
 	})
 
 	Context("when the server is correctly configured", func() {
-		It("reports that the server has started", func() {
+		BeforeEach(func() {
+			port = strconv.Itoa(8081 + config.GinkgoConfig.ParallelNode)
+			envs = []string{"PORT=" + port}
+		})
+
+		It("reports that the server has started on the correct port", func() {
 			Eventually(session).Should(Say("About to listen on port " + port))
 		})
 
 		It("does not exit", func() {
 			Consistently(session).ShouldNot(gexec.Exit())
+		})
+
+		Context("when no port is specified", func() {
+			BeforeEach(func() {
+				envs = []string{}
+			})
+
+			It("it starts on the default port of 8080", func() {
+				Eventually(session).Should(Say("About to listen on port 8080"))
+			})
 		})
 	})
 })
