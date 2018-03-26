@@ -128,5 +128,19 @@ var _ = Describe("GCP Broker Proxy", func() {
 				Eventually(session.Err).Should(Say("Missing PASSWORD environment variable"))
 			})
 		})
+
+		Context("when there are multiple missing parameters", func() {
+			BeforeEach(func() {
+				envs = []string{}
+			})
+
+			It("it fails to start", func() {
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			It("logs that it requires all missing params", func() {
+				Eventually(session.Err).Should(Say("Missing USERNAME, PASSWORD, BROKER_URL, SERVICE_ACCOUNT_JSON environment variable(s)"))
+			})
+		})
 	})
 })

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -18,10 +19,7 @@ func main() {
 		port = "8080"
 	}
 
-	parseRequiredEnv("SERVICE_ACCOUNT_JSON")
-	brokerURL := parseRequiredEnv("BROKER_URL")
-	parseRequiredEnv("USERNAME")
-	parseRequiredEnv("PASSWORD")
+	_, _, brokerURL, _ := getRequiredEnvs()
 
 	_, err := url.ParseRequestURI(brokerURL)
 	if err != nil {
@@ -32,10 +30,32 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
-func parseRequiredEnv(env string) string {
-	parsedEnv := os.Getenv(env)
-	if parsedEnv == "" {
-		log.Fatal(fmt.Sprintf("Missing %s environment variable", env))
+func getRequiredEnvs() (username, password, brokerURL, serviceAccountJSON string) {
+	var missingEnvs []string
+	serviceAccountJSON = os.Getenv("SERVICE_ACCOUNT_JSON")
+	brokerURL = os.Getenv("BROKER_URL")
+	username = os.Getenv("USERNAME")
+	password = os.Getenv("PASSWORD")
+
+	if username == "" {
+		missingEnvs = append(missingEnvs, "USERNAME")
 	}
-	return parsedEnv
+
+	if password == "" {
+		missingEnvs = append(missingEnvs, "PASSWORD")
+	}
+
+	if brokerURL == "" {
+		missingEnvs = append(missingEnvs, "BROKER_URL")
+	}
+
+	if serviceAccountJSON == "" {
+		missingEnvs = append(missingEnvs, "SERVICE_ACCOUNT_JSON")
+	}
+
+	if len(missingEnvs) != 0 {
+		log.Fatal(fmt.Sprintf("Missing %s environment variables(s)", strings.Join(missingEnvs, ", ")))
+	}
+
+	return
 }
