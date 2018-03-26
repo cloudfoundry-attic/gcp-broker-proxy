@@ -1,4 +1,5 @@
 # Google Cloud Platform Proxy Service Broker
+[![Build Status](https://travis-ci.org/cloudfoundry-incubator/gcp-broker-proxy.svg?branch=master)](https://travis-ci.org/cloudfoundry-incubator/gcp-broker-proxy)
 
 **Note**: This repository should be imported as code.cloudfoundry.org/gcp-broker-proxy.
 
