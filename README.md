@@ -7,29 +7,24 @@
 This broker proxies requests to Google's hosted service broker. It handles the OAuth flow and allows the GCP
 to be registered in CloudFoundry.
 
-## Development
-
-### Code
+### Installation
 ```
-go get -u code.cloudfoundry.org/gcp-broker-proxy
+`go get -u code.cloudfoundry.org/gcp-broker-proxy`
 ```
 
-### Test
+### Deploying to Cloud Foundry
+1. Configure the broker by setting the environment variables in the `manifest.yml`.
+1. `make build-linux`
+1. `cf push`
+
+### Development
+
+#### Test
 ```
 make test
 ```
 
-### Build
+#### Build
 ```
 make build
 ```
-
-
-### Deploying to Cloud Foundry
-
-```
-make build
-cf push
-``` 
-
-
