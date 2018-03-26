@@ -19,6 +19,7 @@ run: build
 
 deps:
 	go get github.com/onsi/ginkgo/ginkgo
+	go get -u github.com/onsi/gomega/...
 
 build-linux:
 				CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(BINARY_LINUX) -v
