@@ -9,7 +9,7 @@ to be registered in CloudFoundry.
 
 ### Installation
 ```
-`go get -u code.cloudfoundry.org/gcp-broker-proxy`
+go get -u code.cloudfoundry.org/gcp-broker-proxy
 ```
 
 ### Deploying to Cloud Foundry
