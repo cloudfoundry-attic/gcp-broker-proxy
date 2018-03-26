@@ -32,29 +32,23 @@ func main() {
 
 func getRequiredEnvs() (username, password, brokerURL, serviceAccountJSON string) {
 	var missingEnvs []string
-	serviceAccountJSON = os.Getenv("SERVICE_ACCOUNT_JSON")
-	brokerURL = os.Getenv("BROKER_URL")
-	username = os.Getenv("USERNAME")
-	password = os.Getenv("PASSWORD")
 
-	if username == "" {
-		missingEnvs = append(missingEnvs, "USERNAME")
+	getRequiredEnv := func(env string) string {
+		parsedEnv := os.Getenv(env)
+		if parsedEnv == "" {
+			missingEnvs = append(missingEnvs, env)
+		}
+		return parsedEnv
 	}
 
-	if password == "" {
-		missingEnvs = append(missingEnvs, "PASSWORD")
-	}
-
-	if brokerURL == "" {
-		missingEnvs = append(missingEnvs, "BROKER_URL")
-	}
-
-	if serviceAccountJSON == "" {
-		missingEnvs = append(missingEnvs, "SERVICE_ACCOUNT_JSON")
-	}
+	username = getRequiredEnv("USERNAME")
+	password = getRequiredEnv("PASSWORD")
+	brokerURL = getRequiredEnv("BROKER_URL")
+	serviceAccountJSON = getRequiredEnv("SERVICE_ACCOUNT_JSON")
 
 	if len(missingEnvs) != 0 {
-		log.Fatal(fmt.Sprintf("Missing %s environment variables(s)", strings.Join(missingEnvs, ", ")))
+		errMsg := fmt.Sprintf("Missing %s environment variable(s)", strings.Join(missingEnvs, ", "))
+		log.Fatal(errMsg)
 	}
 
 	return
