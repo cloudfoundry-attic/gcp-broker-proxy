@@ -74,6 +74,34 @@ var _ = Describe("GCP Broker Proxy", func() {
 				Eventually(session).Should(Say("About to listen on port 8080"))
 			})
 		})
+
+		Context("when using incorrect credentials", func() {
+			It("responds with 401", func() {
+				Eventually(func() int {
+					res, err := http.Get("http://localhost:" + port)
+					if err != nil {
+						return -1
+					}
+					return res.StatusCode
+				}).Should(Equal(401))
+			})
+		})
+
+		Context("when using correct credentials", func() {
+			It("responds with 200", func() {
+				res, _ := http.NewRequest("GET", "http://localhost:"+port, nil)
+				res.SetBasicAuth("admin", "foo")
+
+				Eventually(func() int {
+					client := &http.Client{}
+					res, err := client.Do(res)
+					if err != nil {
+						return -1
+					}
+					return res.StatusCode
+				}).Should(Equal(200))
+			})
+		})
 	})
 
 	Describe("when the server is not correctly configured", func() {

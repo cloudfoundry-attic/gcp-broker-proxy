@@ -8,21 +8,18 @@ import (
 	"os"
 	"strings"
 
+	"code.cloudfoundry.org/gcp-broker-proxy/auth"
 	"code.cloudfoundry.org/gcp-broker-proxy/oauth"
 	"code.cloudfoundry.org/gcp-broker-proxy/proxy"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello world")
-	})
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	_, _, brokerURL, serviceAccountJSON := getRequiredEnvs()
+	username, password, brokerURL, serviceAccountJSON := getRequiredEnvs()
 
 	_, err := url.ParseRequestURI(brokerURL)
 	if err != nil {
@@ -42,6 +39,10 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed startup checks: " + err.Error())
 	}
+
+	http.HandleFunc("/", auth.BasicAuth(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello world")
+	}, username, password))
 
 	fmt.Println("Startup checks passed")
 	fmt.Printf("About to listen on port %s\n", port)
