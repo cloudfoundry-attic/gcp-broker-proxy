@@ -1,13 +1,16 @@
 BINARY_NAME=gcp-broker-proxy
 BINARY_LINUX=gcp-broker-proxy-linux
 
-all: deps test build
+all: deps test-units build
 
 build:
 	go build -o $(BINARY_NAME) -v
 
 test:
 	ginkgo -p -r
+
+test-units:
+	ginkgo -p -r -skipPackage *
 
 clean:
 	go clean
