@@ -7,6 +7,9 @@ import (
 	"net/url"
 	"os"
 	"strings"
+
+	"code.cloudfoundry.org/gcp-broker-proxy/oauth"
+	"code.cloudfoundry.org/gcp-broker-proxy/proxy"
 )
 
 func main() {
@@ -19,11 +22,25 @@ func main() {
 		port = "8080"
 	}
 
-	_, _, brokerURL, _ := getRequiredEnvs()
+	_, _, brokerURL, serviceAccountJSON := getRequiredEnvs()
 
 	_, err := url.ParseRequestURI(brokerURL)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("BROKER_URL must be a valid URL: %s", brokerURL))
+	}
+
+	tokenFetcher, err := oauth.NewGCPOAuth(serviceAccountJSON)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Invalid SERVICE_ACCOUNT_JSON: %s", err))
+	}
+
+	client := http.Client{}
+
+	proxy := proxy.NewProxy(brokerURL, tokenFetcher, &client)
+
+	err = proxy.PerformStartupChecks()
+	if err != nil {
+		log.Fatal("Failed startup checks: " + err.Error())
 	}
 
 	fmt.Printf("About to listen on port %s\n", port)

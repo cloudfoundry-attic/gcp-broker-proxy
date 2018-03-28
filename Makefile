@@ -7,7 +7,7 @@ build:
 	go build -o $(BINARY_NAME) -v
 
 test:
-	ginkgo . -p
+	ginkgo -p -r
 
 clean:
 	go clean

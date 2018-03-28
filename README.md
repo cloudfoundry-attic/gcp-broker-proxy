@@ -21,6 +21,7 @@ go get -u code.cloudfoundry.org/gcp-broker-proxy
 
 #### Test
 ```
+export TEST_GCP_SERVICE_ACCOUNT_JSON=$(cat service_account_json.json)
 make test
 ```
 

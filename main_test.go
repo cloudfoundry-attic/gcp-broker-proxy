@@ -1,6 +1,9 @@
 package main_test
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os/exec"
 	"strconv"
 
@@ -20,6 +23,17 @@ var _ = Describe("GCP Broker Proxy", func() {
 		envs    []string
 	)
 
+	var brokerServer *httptest.Server
+	var brokerURL string
+
+	BeforeEach(func() {
+		brokerServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, "I'm a broker")
+		}))
+
+		brokerURL = brokerServer.URL
+	})
+
 	JustBeforeEach(func() {
 		var err error
 
@@ -36,7 +50,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 	Describe("when the server is correctly configured", func() {
 		BeforeEach(func() {
 			port = strconv.Itoa(8081 + config.GinkgoConfig.ParallelNode)
-			envs = []string{"PORT=" + port, "SERVICE_ACCOUNT_JSON={}", "BROKER_URL=https://example.org", "USERNAME=admin", "PASSWORD=foo"}
+			envs = []string{"PORT=" + port, "SERVICE_ACCOUNT_JSON=" + testServiceAccountJSON, "BROKER_URL=" + brokerURL, "USERNAME=admin", "PASSWORD=foo"}
 		})
 
 		It("logs that the server is about to start on a specific port", func() {
@@ -49,7 +63,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 
 		Context("when no port is specified", func() {
 			BeforeEach(func() {
-				envs = []string{"SERVICE_ACCOUNT_JSON={}", "BROKER_URL=https://example.org", "USERNAME=admin", "PASSWORD=foo"}
+				envs = []string{"SERVICE_ACCOUNT_JSON=" + testServiceAccountJSON, "BROKER_URL=" + brokerURL, "USERNAME=admin", "PASSWORD=foo"}
 			})
 
 			It("it starts on the default port of 8080", func() {
@@ -61,7 +75,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 	Describe("when the server is not correctly configured", func() {
 		Context("when the server has not been provided service account information", func() {
 			BeforeEach(func() {
-				envs = []string{"BROKER_URL=https://example.org", "USERNAME=admin", "PASSWORD=foo"}
+				envs = []string{"BROKER_URL=" + brokerURL, "USERNAME=admin", "PASSWORD=foo"}
 			})
 
 			It("it fails to start", func() {
@@ -75,7 +89,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 
 		Context("when the server has not been provided broker url", func() {
 			BeforeEach(func() {
-				envs = []string{"SERVICE_ACCOUNT_JSON={}", "USERNAME=admin", "PASSWORD=foo"}
+				envs = []string{"SERVICE_ACCOUNT_JSON={\"type\": \"service_account\"}", "USERNAME=admin", "PASSWORD=foo"}
 			})
 
 			It("it fails to start", func() {
@@ -89,7 +103,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 
 		Context("when the broker url is invalid", func() {
 			BeforeEach(func() {
-				envs = []string{"SERVICE_ACCOUNT_JSON={}", "BROKER_URL=notaurl", "USERNAME=admin", "PASSWORD=foo"}
+				envs = []string{"SERVICE_ACCOUNT_JSON={\"type\": \"service_account\"}", "BROKER_URL=notaurl", "USERNAME=admin", "PASSWORD=foo"}
 			})
 
 			It("it fails to start", func() {
@@ -103,7 +117,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 
 		Context("when the server has not been provided username", func() {
 			BeforeEach(func() {
-				envs = []string{"SERVICE_ACCOUNT_JSON={}", "BROKER_URL=https://example.org", "PASSWORD=foo"}
+				envs = []string{"SERVICE_ACCOUNT_JSON={\"type\": \"service_account\"}", "BROKER_URL=" + brokerURL, "PASSWORD=foo"}
 			})
 
 			It("it fails to start", func() {
@@ -117,7 +131,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 
 		Context("when the server has not been provided password", func() {
 			BeforeEach(func() {
-				envs = []string{"SERVICE_ACCOUNT_JSON={}", "BROKER_URL=https://example.org", "USERNAME=admin"}
+				envs = []string{"SERVICE_ACCOUNT_JSON={\"type\": \"service_account\"}", "BROKER_URL=" + brokerURL, "USERNAME=admin"}
 			})
 
 			It("it fails to start", func() {
