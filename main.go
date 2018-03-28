@@ -43,6 +43,7 @@ func main() {
 		log.Fatal("Failed startup checks: " + err.Error())
 	}
 
+	fmt.Println("Startup checks passed")
 	fmt.Printf("About to listen on port %s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

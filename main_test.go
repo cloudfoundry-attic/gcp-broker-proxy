@@ -53,6 +53,10 @@ var _ = Describe("GCP Broker Proxy", func() {
 			envs = []string{"PORT=" + port, "SERVICE_ACCOUNT_JSON=" + testServiceAccountJSON, "BROKER_URL=" + brokerURL, "USERNAME=admin", "PASSWORD=foo"}
 		})
 
+		It("logs that the server startup checks have passed", func() {
+			Eventually(session).Should(Say("Startup checks passed"))
+		})
+
 		It("logs that the server is about to start on a specific port", func() {
 			Eventually(session).Should(Say("About to listen on port " + port))
 		})
