@@ -31,7 +31,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 		}))
 
 		gcpOAuthServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "{}")
+			fmt.Fprint(w, `{"access_token": "123"}`)
 		}))
 
 		// These are dummy credentials
