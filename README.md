@@ -21,7 +21,6 @@ go get -u code.cloudfoundry.org/gcp-broker-proxy
 
 #### Test
 ```
-export TEST_GCP_SERVICE_ACCOUNT_JSON=$(cat service_account_json.json)
 make test
 ```
 
@@ -29,3 +28,9 @@ make test
 ```
 make build
 ```
+
+#### Dependencies 
+
+This project uses `dep` as its dependency management tool. The documentation can be found [here](https://golang.github.io/dep/docs/daily-dep.html).
+
+
