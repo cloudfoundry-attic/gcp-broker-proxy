@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"context"
+	"errors"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -32,6 +33,14 @@ func NewGCPOAuth(serviceAccountJSON string) (*GCPOAuth, error) {
 func (o *GCPOAuth) GetToken() (*oauth2.Token, error) {
 	var token *oauth2.Token
 	token, err := o.jwt.TokenSource(context.Background()).Token()
+
+	if err != nil {
+		return token, err
+	}
+
+	if token.AccessToken == "" {
+		return nil, errors.New("Missing access_token in oauth response")
+	}
 
 	return token, err
 }

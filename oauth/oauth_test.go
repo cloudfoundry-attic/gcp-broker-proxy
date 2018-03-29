@@ -77,12 +77,23 @@ var _ = Describe("GCPOAuth", func() {
 
 		Context("When unable to get a token", func() {
 			BeforeEach(func() {
-				responseFromOAuthServer = ``
+				responseFromOAuthServer = `invalid-response`
 			})
 
 			It("returns an error", func() {
 				_, err := oauth.GetToken()
 				Expect(err).To(MatchError(MatchRegexp("cannot fetch token")))
+			})
+		})
+
+		Context("When access token is not returned", func() {
+			BeforeEach(func() {
+				responseFromOAuthServer = `{}`
+			})
+
+			It("returns an error", func() {
+				_, err := oauth.GetToken()
+				Expect(err).To(MatchError(MatchRegexp("Missing access_token in oauth response")))
 			})
 		})
 	})
