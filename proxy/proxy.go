@@ -33,6 +33,8 @@ func NewProxy(brokerURL string, tr TokenRetriever, httpDoer HTTPDoer) Proxy {
 	}
 }
 
+// 1. Should this be part of the proxy?
+// 2. Once the proxy is setup can we just call ourselves?
 func (p *Proxy) PerformStartupChecks() error {
 	token, err := p.tokenRetriever.GetToken()
 	if err != nil {
