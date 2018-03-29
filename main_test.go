@@ -58,7 +58,11 @@ var _ = Describe("GCP Broker Proxy", func() {
 			"auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
 			"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/oauth-testing%40oauth-test-172301.iam.gserviceaccount.com"
 		}`
+	})
 
+	AfterEach(func() {
+		brokerServer.Close()
+		gcpOAuthServer.Close()
 	})
 
 	JustBeforeEach(func() {
