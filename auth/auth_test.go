@@ -37,6 +37,7 @@ var _ = Describe("BasicAuth", func() {
 		It("Should not call given handler", func() {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				Fail("Should not call handler")
+			})
 
 			req.SetBasicAuth("wronguser", "pass")
 			auth := auth.BasicAuth(handler, "user", "pass")

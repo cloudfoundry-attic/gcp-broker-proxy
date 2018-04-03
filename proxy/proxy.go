@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -20,12 +22,12 @@ type HTTPDoer interface {
 }
 
 type Proxy struct {
-	brokerURL      string
+	brokerURL      *url.URL
 	tokenRetriever TokenRetriever
 	httpDoer       HTTPDoer
 }
 
-func NewProxy(brokerURL string, tr TokenRetriever, httpDoer HTTPDoer) Proxy {
+func NewProxy(brokerURL *url.URL, tr TokenRetriever, httpDoer HTTPDoer) Proxy {
 	return Proxy{
 		brokerURL:      brokerURL,
 		tokenRetriever: tr,
@@ -41,8 +43,7 @@ func (p *Proxy) PerformStartupChecks() error {
 		return errors.Wrap(err, "Failed obtaining oauth token")
 	}
 
-	req, err := http.NewRequest("GET", p.brokerURL+"/v2/catalog", nil)
-
+	req, err := http.NewRequest("GET", p.brokerURL.String()+"/v2/catalog", nil)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create request")
 	}
@@ -69,4 +70,19 @@ func (p *Proxy) PerformStartupChecks() error {
 	}
 
 	return err
+}
+
+func (p *Proxy) ReverseProxy() http.Handler {
+	reverseProxy := httputil.NewSingleHostReverseProxy(p.brokerURL)
+
+	dirFunc := reverseProxy.Director
+
+	newDirFunc := func(req *http.Request) {
+		dirFunc(req)
+		// req.Host = p.brokerURL.Hostname()
+	}
+
+	reverseProxy.Director = newDirFunc
+
+	return reverseProxy
 }

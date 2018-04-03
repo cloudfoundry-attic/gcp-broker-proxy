@@ -19,11 +19,11 @@ func main() {
 		port = "8080"
 	}
 
-	username, password, brokerURL, serviceAccountJSON := getRequiredEnvs()
+	username, password, brokerURLString, serviceAccountJSON := getRequiredEnvs()
 
-	_, err := url.ParseRequestURI(brokerURL)
+	brokerURL, err := url.ParseRequestURI(brokerURLString)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("BROKER_URL must be a valid URL: %s", brokerURL))
+		log.Fatal(fmt.Sprintf("BROKER_URL must be a valid URL: %s", brokerURLString))
 	}
 
 	tokenFetcher, err := oauth.NewGCPOAuth(serviceAccountJSON)
@@ -40,13 +40,14 @@ func main() {
 		log.Fatal("Failed startup checks: " + err.Error())
 	}
 
-	http.HandleFunc("/", auth.BasicAuth(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello world")
-	}, username, password))
+	reverseProxy := proxy.ReverseProxy()
+
+	authReverseProxy := auth.BasicAuth(reverseProxy.ServeHTTP, username, password)
 
 	fmt.Println("Startup checks passed")
 	fmt.Printf("About to listen on port %s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+
+	log.Fatal(http.ListenAndServe(":"+port, authReverseProxy))
 }
 
 func getRequiredEnvs() (username, password, brokerURL, serviceAccountJSON string) {

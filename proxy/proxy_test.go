@@ -4,10 +4,13 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/ghttp"
 	"golang.org/x/oauth2"
 
 	"code.cloudfoundry.org/gcp-broker-proxy/proxy"
@@ -18,7 +21,7 @@ var _ = Describe("Proxy", func() {
 	Describe("PerformStartupCheck", func() {
 		var (
 			startupErr   error
-			brokerURL    string
+			brokerURL    *url.URL
 			token        *oauth2.Token
 			tokenErr     error
 			brokerStatus int
@@ -30,9 +33,12 @@ var _ = Describe("Proxy", func() {
 		)
 
 		BeforeEach(func() {
+			var err error
 			brokerStatus = 200
 			startupErr = nil
-			brokerURL = "http://example-broker.com"
+			brokerURL, err = url.ParseRequestURI("http://example-broker.com")
+			Expect(err).ToNot(HaveOccurred())
+
 			token = &oauth2.Token{AccessToken: "my-gcp-token"}
 			tokenErr = nil
 			tokenRetrieverFake = new(proxyfakes.FakeTokenRetriever)
@@ -104,5 +110,82 @@ var _ = Describe("Proxy", func() {
 				Expect(startupErr).To(MatchError(ContainSubstring("some-broker-msg")))
 			})
 		})
+	})
+
+	Describe("ReverseProxy", func() {
+		var (
+			token     *oauth2.Token
+			brokerURL *url.URL
+
+			tokenRetrieverFake *proxyfakes.FakeTokenRetriever
+			httpClientFake     *proxyfakes.FakeHTTPDoer
+			proxyBroker        proxy.Proxy
+
+			broker *ghttp.Server
+		)
+
+		BeforeEach(func() {
+			var err error
+			broker = ghttp.NewServer()
+			brokerURL, err = url.ParseRequestURI(broker.URL())
+			Expect(err).ToNot(HaveOccurred())
+
+			token = &oauth2.Token{AccessToken: "my-gcp-token"}
+			tokenRetrieverFake = new(proxyfakes.FakeTokenRetriever)
+
+			httpClientFake = new(proxyfakes.FakeHTTPDoer)
+			proxyBroker = proxy.NewProxy(brokerURL, tokenRetrieverFake, httpClientFake)
+
+			broker.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/v2/catalog"),
+					ghttp.RespondWith(http.StatusOK, "{}"),
+				),
+			)
+		})
+
+		AfterEach(func() {
+			broker.Close()
+		})
+
+		Context("when getting the token succeededs", func() {
+			BeforeEach(func() {
+				tokenRetrieverFake.GetTokenReturns(token, nil)
+			})
+
+			It("proxies the request path to the broker", func() {
+				w := httptest.NewRecorder()
+				req, _ := http.NewRequest("GET", "/v2/catalog", nil)
+				handler := proxyBroker.ReverseProxy()
+
+				handler.ServeHTTP(w, req)
+			})
+
+			It("sets the host correctly", func() {
+
+			})
+		})
+
+		// Context("when getting the token fails", func() {
+		// 	BeforeEach(func() {
+		// 		tokenRetrieverFake.GetTokenReturns(nil, errors.New("oops"))
+		// 	})
+		//
+		// 	It("responds with 502", func() {
+		// 		w := httptest.NewRecorder()
+		// 		req, _ := http.NewRequest("GET", "/v2/catalog", nil)
+		// 		handler := proxyBroker.ReverseProxy()
+		//
+		// 		handler.ServeHTTP(w, req)
+		// 		Expect(w.Code).To(Equal(502))
+		// 	})
+		// It("logs the error", func() {
+		// 	w := httptest.NewRecorder()
+		// 	req, _ := http.NewRequest("GET", "/v2/catalog", nil)
+		// 	handler := proxyBroker.ReverseProxy()
+		//
+		// 	handler.ServeHTTP(w, req)
+		// })
+		// })
 	})
 })

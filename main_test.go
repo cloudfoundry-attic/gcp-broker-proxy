@@ -121,8 +121,14 @@ var _ = Describe("GCP Broker Proxy", func() {
 		})
 
 		Context("when using correct credentials", func() {
-			It("responds with 200", func() {
-				req, err := http.NewRequest("GET", "http://localhost:"+envs.port, nil)
+			BeforeEach(func() {
+				brokerServer.AppendHandlers(
+					ghttp.VerifyRequest("GET", "/v2/some-broker-endpoint"),
+				)
+			})
+
+			It("proxies the request to the broker", func() {
+				req, err := http.NewRequest("GET", "http://localhost:"+envs.port+"/v2/some-broker-endpoint", nil)
 				Expect(err).NotTo(HaveOccurred())
 				req.SetBasicAuth(envs.username, envs.password)
 
@@ -134,6 +140,8 @@ var _ = Describe("GCP Broker Proxy", func() {
 					}
 					return res.StatusCode
 				}).Should(Equal(200))
+
+				Expect(brokerServer.ReceivedRequests()).Should(HaveLen(2))
 			})
 		})
 	})
