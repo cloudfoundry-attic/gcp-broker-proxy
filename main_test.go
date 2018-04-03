@@ -12,6 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"github.com/onsi/gomega/ghttp"
 
 	_ "code.cloudfoundry.org/gcp-broker-proxy"
 )
@@ -21,14 +22,18 @@ var _ = Describe("GCP Broker Proxy", func() {
 		session *gexec.Session
 		envs    *envVars
 
-		brokerServer   *httptest.Server
+		brokerServer   *ghttp.Server
 		gcpOAuthServer *httptest.Server
 	)
 
 	BeforeEach(func() {
-		brokerServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "I'm a broker")
-		}))
+		brokerServer = ghttp.NewServer()
+		brokerServer.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest("GET", "/v2/catalog"),
+				ghttp.RespondWith(http.StatusOK, "{}"),
+			),
+		)
 
 		gcpOAuthServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `{"access_token": "123"}`)
@@ -52,7 +57,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 		envs = &envVars{
 			port:               strconv.Itoa(8081 + config.GinkgoConfig.ParallelNode),
 			serviceAccountJSON: testServiceAccountJSON,
-			brokerURL:          brokerServer.URL,
+			brokerURL:          brokerServer.URL(),
 			username:           "admin",
 			password:           "password",
 		}
@@ -85,6 +90,10 @@ var _ = Describe("GCP Broker Proxy", func() {
 
 		It("does not exit", func() {
 			Consistently(session).ShouldNot(gexec.Exit())
+		})
+
+		It("fetch the catalog from the broker", func() {
+			Eventually(func() []*http.Request { return brokerServer.ReceivedRequests() }).Should(HaveLen(1))
 		})
 
 		Context("when no port is specified", func() {
