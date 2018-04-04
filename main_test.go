@@ -132,38 +132,39 @@ var _ = Describe("GCP Broker Proxy", func() {
 				)
 			})
 
-			It("proxies the request to the broker", func() {
-				req, err := http.NewRequest("GET", "http://localhost:"+envs.port+"/v2/some-broker-endpoint", nil)
-				Expect(err).NotTo(HaveOccurred())
-				req.SetBasicAuth(envs.username, envs.password)
+			Context("and the request is proxied to the broker", func() {
+				var req *http.Request
 
-				Eventually(func() int {
-					client := &http.Client{}
-					res, err := client.Do(req)
-					if err != nil {
-						return -1
-					}
-					return res.StatusCode
-				}).Should(Equal(200))
+				BeforeEach(func() {
+					var err error
+					req, err = http.NewRequest("GET", "http://localhost:"+envs.port+"/v2/some-broker-endpoint", nil)
+					Expect(err).NotTo(HaveOccurred())
+					req.SetBasicAuth(envs.username, envs.password)
+				})
 
-				Expect(brokerServer.ReceivedRequests()).Should(HaveLen(2))
-			})
+				It("proxies the correct path", func() {
+					Eventually(func() int {
+						client := &http.Client{}
+						res, err := client.Do(req)
+						if err != nil {
+							return -1
+						}
+						return res.StatusCode
+					}).Should(Equal(200))
+					Expect(brokerServer.ReceivedRequests()).Should(HaveLen(2))
+				})
 
-			FIt("does not proxy Basic Auth", func() {
-				req, err := http.NewRequest("GET", "http://localhost:"+envs.port+"/v2/some-broker-endpoint", nil)
-				Expect(err).NotTo(HaveOccurred())
-				req.SetBasicAuth(envs.username, envs.password)
-
-				Eventually(func() int {
-					client := &http.Client{}
-					res, err := client.Do(req)
-					if err != nil {
-						return -1
-					}
-					return res.StatusCode
-				}).Should(Equal(200))
-
-				Expect(brokerServer.ReceivedRequests()[1].Header.Get("Authorization")).Should(Equal("Bearer 123"))
+				It("proxies with a bearer token", func() {
+					Eventually(func() int {
+						client := &http.Client{}
+						res, err := client.Do(req)
+						if err != nil {
+							return -1
+						}
+						return res.StatusCode
+					}).Should(Equal(200))
+					Expect(brokerServer.ReceivedRequests()[1].Header.Get("Authorization")).Should(Equal("Bearer 123"))
+				})
 			})
 		})
 	})

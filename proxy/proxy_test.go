@@ -148,7 +148,7 @@ var _ = Describe("Proxy", func() {
 			brokerServer.Close()
 		})
 
-		Context("when getting the token succeededs", func() {
+		Context("when proxying", func() {
 			BeforeEach(func() {
 				tokenRetrieverFake.GetTokenReturns(token, nil)
 				w := httptest.NewRecorder()
@@ -164,31 +164,9 @@ var _ = Describe("Proxy", func() {
 				Expect(brokerServer.ReceivedRequests()[0].URL.Path).Should(Equal("/v2/any-endpoint"))
 			})
 
-			FIt("sets the host correctly", func() {
+			It("sets the host correctly", func() {
 				Expect(brokerServer.ReceivedRequests()[0].Host).Should(Equal(brokerURL.Host))
 			})
 		})
-
-		// Context("when getting the token fails", func() {
-		// 	BeforeEach(func() {
-		// 		tokenRetrieverFake.GetTokenReturns(nil, errors.New("oops"))
-		// 	})
-		//
-		// 	It("responds with 502", func() {
-		// 		w := httptest.NewRecorder()
-		// 		req, _ := http.NewRequest("GET", "/v2/catalog", nil)
-		// 		handler := proxyBroker.ReverseProxy()
-		//
-		// 		handler.ServeHTTP(w, req)
-		// 		Expect(w.Code).To(Equal(502))
-		// 	})
-		// It("logs the error", func() {
-		// 	w := httptest.NewRecorder()
-		// 	req, _ := http.NewRequest("GET", "/v2/catalog", nil)
-		// 	handler := proxyBroker.ReverseProxy()
-		//
-		// 	handler.ServeHTTP(w, req)
-		// })
-		// })
 	})
 })

@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/gcp-broker-proxy/auth"
 	"code.cloudfoundry.org/gcp-broker-proxy/oauth"
 	"code.cloudfoundry.org/gcp-broker-proxy/proxy"
+	"code.cloudfoundry.org/gcp-broker-proxy/token"
 )
 
 func main() {
@@ -41,8 +42,8 @@ func main() {
 	}
 
 	reverseProxy := proxy.ReverseProxy()
-	// tokenHandler := tokenHandler.f(reverseProxy)
-	authReverseProxy := auth.BasicAuth(reverseProxy.ServeHTTP, username, password)
+	tokenHandler := token.TokenHandler(reverseProxy.ServeHTTP, tokenFetcher)
+	authReverseProxy := auth.BasicAuth(tokenHandler, username, password)
 
 	fmt.Println("Startup checks passed")
 	fmt.Printf("About to listen on port %s\n", port)

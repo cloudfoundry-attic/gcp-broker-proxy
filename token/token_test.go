@@ -1,43 +1,81 @@
 package token_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 
+	"golang.org/x/oauth2"
+
 	"code.cloudfoundry.org/gcp-broker-proxy/token"
+	"code.cloudfoundry.org/gcp-broker-proxy/token/tokenfakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("BasicAuth", func() {
-	var req *http.Request
+var _ = Describe("TokenHandler", func() {
+	var req, _ = http.NewRequest("GET", "/v2/catalog", nil)
+	var tokenRetrieverFake *tokenfakes.FakeTokenRetriever
+	var noOpHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 
-	BeforeEach(func() {
-		var err error
-		req, err = http.NewRequest("GET", "blah.com", nil)
-		Expect(err).ToNot(HaveOccurred())
+	Context("when getting the token succeeds", func() {
+		BeforeEach(func() {
+			tokenRetrieverFake = new(tokenfakes.FakeTokenRetriever)
+			tokenRetrieverFake.GetTokenReturns(&oauth2.Token{AccessToken: "123"}, nil)
+		})
 
-		// gcpOAuthServer = ghttp.NewServer()
-		// gcpOAuthServer.AppendHandlers(
-		// 	http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// 		fmt.Fprint(w, `{"access_token": "123"}`)
-		// 	}),
-		// )
-	})
-
-	Context("for the correct credentials", func() {
-		It("Should call the given handler", func(done Done) {
+		It("should call the given handler", func(done Done) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				Expect(r.Header.Get("Authorization")).Should(Equal("Bearer 123"))
 				close(done)
 			})
 
-			req.SetBasicAuth("user", "pass")
-			tokenHandler := token.TokenHandler(handler)
+			tokenHandler := token.TokenHandler(handler, tokenRetrieverFake)
 			writer := httptest.NewRecorder()
 
 			tokenHandler(writer, req)
+		})
+
+		It("should set the Authorization header with a bearer token", func() {
+			tokenHandler := token.TokenHandler(noOpHandler, tokenRetrieverFake)
+			writer := httptest.NewRecorder()
+
+			tokenHandler(writer, req)
+			Expect(req.Header.Get("Authorization")).Should(Equal("Bearer 123"))
+		})
+	})
+
+	Context("when getting the token fails", func() {
+		BeforeEach(func() {
+			tokenRetrieverFake = new(tokenfakes.FakeTokenRetriever)
+			tokenRetrieverFake.GetTokenReturns(nil, errors.New("oops"))
+		})
+
+		It("should not call the given handler", func() {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				Fail("This should not have been called")
+			})
+
+			tokenHandler := token.TokenHandler(handler, tokenRetrieverFake)
+			writer := httptest.NewRecorder()
+
+			tokenHandler(writer, req)
+		})
+
+		It("responds with a 502 Bad Gateway", func() {
+			tokenHandler := token.TokenHandler(noOpHandler, tokenRetrieverFake)
+			writer := httptest.NewRecorder()
+
+			tokenHandler(writer, req)
+			Expect(writer.Code).To(Equal(502))
+		})
+
+		It("responds with a user facing error message", func() {
+			tokenHandler := token.TokenHandler(noOpHandler, tokenRetrieverFake)
+			writer := httptest.NewRecorder()
+
+			tokenHandler(writer, req)
+			Expect(writer.Body.String()).To(Equal("Error retrieving OAuth token"))
 		})
 	})
 })
