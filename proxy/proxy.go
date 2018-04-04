@@ -79,7 +79,7 @@ func (p *Proxy) ReverseProxy() http.Handler {
 
 	newDirFunc := func(req *http.Request) {
 		dirFunc(req)
-		// req.Host = p.brokerURL.Hostname()
+		req.Host = p.brokerURL.Host
 	}
 
 	reverseProxy.Director = newDirFunc

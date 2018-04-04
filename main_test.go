@@ -125,6 +125,11 @@ var _ = Describe("GCP Broker Proxy", func() {
 				brokerServer.AppendHandlers(
 					ghttp.VerifyRequest("GET", "/v2/some-broker-endpoint"),
 				)
+				gcpOAuthServer.AppendHandlers(
+					http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						fmt.Fprint(w, `{"access_token": "123"}`)
+					}),
+				)
 			})
 
 			It("proxies the request to the broker", func() {
@@ -142,6 +147,23 @@ var _ = Describe("GCP Broker Proxy", func() {
 				}).Should(Equal(200))
 
 				Expect(brokerServer.ReceivedRequests()).Should(HaveLen(2))
+			})
+
+			FIt("does not proxy Basic Auth", func() {
+				req, err := http.NewRequest("GET", "http://localhost:"+envs.port+"/v2/some-broker-endpoint", nil)
+				Expect(err).NotTo(HaveOccurred())
+				req.SetBasicAuth(envs.username, envs.password)
+
+				Eventually(func() int {
+					client := &http.Client{}
+					res, err := client.Do(req)
+					if err != nil {
+						return -1
+					}
+					return res.StatusCode
+				}).Should(Equal(200))
+
+				Expect(brokerServer.ReceivedRequests()[1].Header.Get("Authorization")).Should(Equal("Bearer 123"))
 			})
 		})
 	})

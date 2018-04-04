@@ -121,13 +121,13 @@ var _ = Describe("Proxy", func() {
 			httpClientFake     *proxyfakes.FakeHTTPDoer
 			proxyBroker        proxy.Proxy
 
-			broker *ghttp.Server
+			brokerServer *ghttp.Server
 		)
 
 		BeforeEach(func() {
 			var err error
-			broker = ghttp.NewServer()
-			brokerURL, err = url.ParseRequestURI(broker.URL())
+			brokerServer = ghttp.NewServer()
+			brokerURL, err = url.ParseRequestURI(brokerServer.URL())
 			Expect(err).ToNot(HaveOccurred())
 
 			token = &oauth2.Token{AccessToken: "my-gcp-token"}
@@ -136,33 +136,36 @@ var _ = Describe("Proxy", func() {
 			httpClientFake = new(proxyfakes.FakeHTTPDoer)
 			proxyBroker = proxy.NewProxy(brokerURL, tokenRetrieverFake, httpClientFake)
 
-			broker.AppendHandlers(
+			brokerServer.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("GET", "/v2/catalog"),
+					ghttp.VerifyRequest("GET", "/v2/any-endpoint"),
 					ghttp.RespondWith(http.StatusOK, "{}"),
 				),
 			)
 		})
 
 		AfterEach(func() {
-			broker.Close()
+			brokerServer.Close()
 		})
 
 		Context("when getting the token succeededs", func() {
 			BeforeEach(func() {
 				tokenRetrieverFake.GetTokenReturns(token, nil)
-			})
-
-			It("proxies the request path to the broker", func() {
 				w := httptest.NewRecorder()
-				req, _ := http.NewRequest("GET", "/v2/catalog", nil)
+				req, _ := http.NewRequest("GET", "/v2/any-endpoint", nil)
+				req.Host = "example.com"
 				handler := proxyBroker.ReverseProxy()
 
 				handler.ServeHTTP(w, req)
 			})
 
-			It("sets the host correctly", func() {
+			It("proxies the request path to the broker", func() {
+				Expect(brokerServer.ReceivedRequests()).Should(HaveLen(1))
+				Expect(brokerServer.ReceivedRequests()[0].URL.Path).Should(Equal("/v2/any-endpoint"))
+			})
 
+			FIt("sets the host correctly", func() {
+				Expect(brokerServer.ReceivedRequests()[0].Host).Should(Equal(brokerURL.Host))
 			})
 		})
 

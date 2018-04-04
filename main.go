@@ -41,7 +41,7 @@ func main() {
 	}
 
 	reverseProxy := proxy.ReverseProxy()
-
+	// tokenHandler := tokenHandler.f(reverseProxy)
 	authReverseProxy := auth.BasicAuth(reverseProxy.ServeHTTP, username, password)
 
 	fmt.Println("Startup checks passed")
