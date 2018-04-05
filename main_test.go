@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os/exec"
 	"strconv"
@@ -114,7 +115,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 
 			BeforeEach(func() {
 				var err error
-				body := strings.NewReader("{'data': 'for gcp'}")
+				body := strings.NewReader(`{"data": "to broker"}`)
 				req, err = http.NewRequest("PUT", "http://localhost:"+envs.port+"/v2/any-endpoint?query=param", body)
 				req.Header.Set("Accept", "application/json")
 				req.SetBasicAuth(envs.username, envs.password)
@@ -128,24 +129,28 @@ var _ = Describe("GCP Broker Proxy", func() {
 			})
 
 			It("proxies the request with a bearer token", func() {
+				Eventually(session).Should(Say("About to listen on port " + envs.port))
+
 				brokerServer.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("PUT", "/v2/any-endpoint", "query=param"),
 						ghttp.VerifyHeaderKV("Accept", "application/json"),
 						ghttp.VerifyHeaderKV("Authorization", "Bearer 123"),
-						ghttp.VerifyBody([]byte("{'data': 'for gcp'}")),
-						ghttp.RespondWith(http.StatusOK, "{}"),
+						ghttp.VerifyBody([]byte(`{"data": "to broker"}`)),
+						ghttp.RespondWith(http.StatusOK, `{"data": "from broker"}`, http.Header{"Content-Type": []string{"application/json"}}),
 					),
 				)
+				client := &http.Client{}
+				res, err := client.Do(req)
+				Expect(err).ToNot(HaveOccurred())
 
-				Eventually(func() int {
-					client := &http.Client{}
-					res, err := client.Do(req)
-					if err != nil {
-						return -1
-					}
-					return res.StatusCode
-				}).Should(Equal(200))
+				Expect(res.StatusCode).To(Equal(200))
+
+				defer res.Body.Close()
+				body, err := ioutil.ReadAll(res.Body)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(body)).To(Equal(`{"data": "from broker"}`))
+				Expect(string(res.Header.Get("Content-Type"))).To(Equal("application/json"))
 			})
 		})
 
