@@ -1,4 +1,4 @@
-memo = "d4c960817f028e927b2de6dc7492d7f9c5ad244b9c6f4f0528655b4272f5b97b"
+memo = "77020cb0117e8676e36cad116d1c8bc77cdd7c79c673b8eac598869e15933fea"
 
 [[projects]]
   name = "cloud.google.com/go"
@@ -29,6 +29,12 @@ memo = "d4c960817f028e927b2de6dc7492d7f9c5ad244b9c6f4f0528655b4272f5b97b"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
+
+[[projects]]
+  name = "github.com/urfave/negroni"
+  packages = ["."]
+  revision = "5dbbc83f748fc3ad38585842b0aedab546d0ea1e"
+  version = "v0.3.0"
 
 [[projects]]
   branch = "master"
