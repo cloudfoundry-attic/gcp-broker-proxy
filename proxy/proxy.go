@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/pkg/errors"
+	"github.com/urfave/negroni"
 	"golang.org/x/oauth2"
 )
 
@@ -72,7 +73,7 @@ func (p *Proxy) PerformStartupChecks() error {
 	return err
 }
 
-func (p *Proxy) ReverseProxy() http.Handler {
+func (p *Proxy) ReverseProxy() negroni.HandlerFunc {
 	reverseProxy := httputil.NewSingleHostReverseProxy(p.brokerURL)
 
 	dirFunc := reverseProxy.Director
@@ -84,5 +85,8 @@ func (p *Proxy) ReverseProxy() http.Handler {
 
 	reverseProxy.Director = newDirFunc
 
-	return reverseProxy
+	return negroni.HandlerFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		reverseProxy.ServeHTTP(rw, r)
+		next(rw, r)
+	})
 }

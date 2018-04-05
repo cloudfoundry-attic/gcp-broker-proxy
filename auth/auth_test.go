@@ -26,10 +26,10 @@ var _ = Describe("BasicAuth", func() {
 			})
 
 			req.SetBasicAuth("user", "pass")
-			auth := auth.BasicAuth(handler, "user", "pass")
+			auth := auth.BasicAuth("user", "pass")
 			writer := httptest.NewRecorder()
 
-			auth(writer, req)
+			auth(writer, req, handler)
 		})
 	})
 
@@ -40,10 +40,10 @@ var _ = Describe("BasicAuth", func() {
 			})
 
 			req.SetBasicAuth("wronguser", "pass")
-			auth := auth.BasicAuth(handler, "user", "pass")
+			auth := auth.BasicAuth("user", "pass")
 
 			writer := httptest.NewRecorder()
-			auth(writer, req)
+			auth(writer, req, handler)
 
 			Expect(writer.Code).To(Equal(401))
 			Expect(writer.Body.String()).To(Equal("Incorrect username/password"))
@@ -57,10 +57,10 @@ var _ = Describe("BasicAuth", func() {
 			})
 
 			req.SetBasicAuth("user", "wrongpass")
-			auth := auth.BasicAuth(handler, "user", "pass")
+			auth := auth.BasicAuth("user", "pass")
 
 			writer := httptest.NewRecorder()
-			auth(writer, req)
+			auth(writer, req, handler)
 
 			Expect(writer.Code).To(Equal(401))
 			Expect(writer.Body.String()).To(Equal("Incorrect username/password"))

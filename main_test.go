@@ -128,7 +128,7 @@ var _ = Describe("GCP Broker Proxy", func() {
 				)
 			})
 
-			It("proxies the request with a bearer token", func() {
+			It("proxies the request with a bearer token and response", func() {
 				Eventually(session).Should(Say("About to listen on port " + envs.port))
 
 				brokerServer.AppendHandlers(

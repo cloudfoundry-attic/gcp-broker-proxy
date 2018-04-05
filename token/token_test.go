@@ -30,17 +30,17 @@ var _ = Describe("TokenHandler", func() {
 				close(done)
 			})
 
-			tokenHandler := token.TokenHandler(handler, tokenRetrieverFake)
+			tokenHandler := token.TokenHandler(tokenRetrieverFake)
 			writer := httptest.NewRecorder()
 
-			tokenHandler(writer, req)
+			tokenHandler(writer, req, handler)
 		})
 
 		It("should set the Authorization header with a bearer token", func() {
-			tokenHandler := token.TokenHandler(noOpHandler, tokenRetrieverFake)
+			tokenHandler := token.TokenHandler(tokenRetrieverFake)
 			writer := httptest.NewRecorder()
 
-			tokenHandler(writer, req)
+			tokenHandler(writer, req, noOpHandler)
 			Expect(req.Header.Get("Authorization")).Should(Equal("Bearer 123"))
 		})
 	})
@@ -56,25 +56,25 @@ var _ = Describe("TokenHandler", func() {
 				Fail("This should not have been called")
 			})
 
-			tokenHandler := token.TokenHandler(handler, tokenRetrieverFake)
+			tokenHandler := token.TokenHandler(tokenRetrieverFake)
 			writer := httptest.NewRecorder()
 
-			tokenHandler(writer, req)
+			tokenHandler(writer, req, handler)
 		})
 
 		It("responds with a 502 Bad Gateway", func() {
-			tokenHandler := token.TokenHandler(noOpHandler, tokenRetrieverFake)
+			tokenHandler := token.TokenHandler(tokenRetrieverFake)
 			writer := httptest.NewRecorder()
 
-			tokenHandler(writer, req)
+			tokenHandler(writer, req, noOpHandler)
 			Expect(writer.Code).To(Equal(502))
 		})
 
 		It("responds with a user facing error message", func() {
-			tokenHandler := token.TokenHandler(noOpHandler, tokenRetrieverFake)
+			tokenHandler := token.TokenHandler(tokenRetrieverFake)
 			writer := httptest.NewRecorder()
 
-			tokenHandler(writer, req)
+			tokenHandler(writer, req, noOpHandler)
 			Expect(writer.Body.String()).To(Equal("Error retrieving OAuth token"))
 		})
 	})

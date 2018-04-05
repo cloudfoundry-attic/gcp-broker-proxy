@@ -117,6 +117,7 @@ var _ = Describe("Proxy", func() {
 			brokerURL    *url.URL
 			proxyBroker  proxy.Proxy
 			brokerServer *ghttp.Server
+			noOpHandler  = http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})
 		)
 
 		BeforeEach(func() {
@@ -135,26 +136,6 @@ var _ = Describe("Proxy", func() {
 			brokerServer.Close()
 		})
 
-		It("proxies everything", func() {
-			brokerServer.AppendHandlers(
-				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("PUT", "/v2/any-endpoint", "query=param"),
-					ghttp.VerifyHeaderKV("Accept", "application/json"),
-					ghttp.VerifyBody([]byte("{'data': 'for gcp'}")),
-					ghttp.RespondWith(http.StatusOK, "{}"),
-				),
-			)
-
-			body := strings.NewReader("{'data': 'for gcp'}")
-
-			req, _ := http.NewRequest("PUT", "/v2/any-endpoint?query=param", body)
-			req.Header.Set("Accept", "application/json")
-
-			w := httptest.NewRecorder()
-			handler := proxyBroker.ReverseProxy()
-			handler.ServeHTTP(w, req)
-		})
-
 		It("sets the host header to the broker host", func() {
 			brokerServer.AppendHandlers(
 				ghttp.CombineHandlers(
@@ -167,8 +148,8 @@ var _ = Describe("Proxy", func() {
 			req.Host = "example.com"
 
 			w := httptest.NewRecorder()
-			handler := proxyBroker.ReverseProxy()
-			handler.ServeHTTP(w, req)
+			proxyHandler := proxyBroker.ReverseProxy()
+			proxyHandler(w, req, noOpHandler)
 
 			Expect(brokerServer.ReceivedRequests()[0].Host).Should(Equal(brokerURL.Host))
 		})

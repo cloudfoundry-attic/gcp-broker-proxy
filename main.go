@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/urfave/negroni"
+
 	"code.cloudfoundry.org/gcp-broker-proxy/auth"
 	"code.cloudfoundry.org/gcp-broker-proxy/oauth"
 	"code.cloudfoundry.org/gcp-broker-proxy/proxy"
@@ -40,15 +42,20 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed startup checks: " + err.Error())
 	}
-
-	reverseProxy := proxy.ReverseProxy()
-	tokenHandler := token.TokenHandler(reverseProxy.ServeHTTP, tokenFetcher)
-	authReverseProxy := auth.BasicAuth(tokenHandler, username, password)
-
 	fmt.Println("Startup checks passed")
-	fmt.Printf("About to listen on port %s\n", port)
 
-	log.Fatal(http.ListenAndServe(":"+port, authReverseProxy))
+	basicAuth := auth.BasicAuth(username, password)
+	reverseProxy := proxy.ReverseProxy()
+	tokenHandler := token.TokenHandler(tokenFetcher)
+
+	n := negroni.New()
+	n.Use(negroni.NewLogger())
+	n.Use(basicAuth)
+	n.Use(tokenHandler)
+	n.Use(reverseProxy)
+
+	fmt.Printf("About to listen on port %s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, n))
 }
 
 func getRequiredEnvs() (username, password, brokerURL, serviceAccountJSON string) {
