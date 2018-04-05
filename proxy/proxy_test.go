@@ -114,13 +114,8 @@ var _ = Describe("Proxy", func() {
 
 	Describe("ReverseProxy", func() {
 		var (
-			token     *oauth2.Token
-			brokerURL *url.URL
-
-			tokenRetrieverFake *proxyfakes.FakeTokenRetriever
-			httpClientFake     *proxyfakes.FakeHTTPDoer
-			proxyBroker        proxy.Proxy
-
+			brokerURL    *url.URL
+			proxyBroker  proxy.Proxy
 			brokerServer *ghttp.Server
 		)
 
@@ -130,43 +125,52 @@ var _ = Describe("Proxy", func() {
 			brokerURL, err = url.ParseRequestURI(brokerServer.URL())
 			Expect(err).ToNot(HaveOccurred())
 
-			token = &oauth2.Token{AccessToken: "my-gcp-token"}
-			tokenRetrieverFake = new(proxyfakes.FakeTokenRetriever)
+			tokenRetrieverFake := new(proxyfakes.FakeTokenRetriever)
+			httpClientFake := new(proxyfakes.FakeHTTPDoer)
 
-			httpClientFake = new(proxyfakes.FakeHTTPDoer)
 			proxyBroker = proxy.NewProxy(brokerURL, tokenRetrieverFake, httpClientFake)
-
-			brokerServer.AppendHandlers(
-				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("GET", "/v2/any-endpoint"),
-					ghttp.RespondWith(http.StatusOK, "{}"),
-				),
-			)
 		})
 
 		AfterEach(func() {
 			brokerServer.Close()
 		})
 
-		Context("when proxying", func() {
-			BeforeEach(func() {
-				tokenRetrieverFake.GetTokenReturns(token, nil)
-				w := httptest.NewRecorder()
-				req, _ := http.NewRequest("GET", "/v2/any-endpoint", nil)
-				req.Host = "example.com"
-				handler := proxyBroker.ReverseProxy()
+		It("proxies everything", func() {
+			brokerServer.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("PUT", "/v2/any-endpoint", "query=param"),
+					ghttp.VerifyHeaderKV("Accept", "application/json"),
+					ghttp.VerifyBody([]byte("{'data': 'for gcp'}")),
+					ghttp.RespondWith(http.StatusOK, "{}"),
+				),
+			)
 
-				handler.ServeHTTP(w, req)
-			})
+			body := strings.NewReader("{'data': 'for gcp'}")
 
-			It("proxies the request path to the broker", func() {
-				Expect(brokerServer.ReceivedRequests()).Should(HaveLen(1))
-				Expect(brokerServer.ReceivedRequests()[0].URL.Path).Should(Equal("/v2/any-endpoint"))
-			})
+			req, _ := http.NewRequest("PUT", "/v2/any-endpoint?query=param", body)
+			req.Header.Set("Accept", "application/json")
 
-			It("sets the host correctly", func() {
-				Expect(brokerServer.ReceivedRequests()[0].Host).Should(Equal(brokerURL.Host))
-			})
+			w := httptest.NewRecorder()
+			handler := proxyBroker.ReverseProxy()
+			handler.ServeHTTP(w, req)
+		})
+
+		It("sets the host header to the broker host", func() {
+			brokerServer.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/v2/any-endpoint"),
+					ghttp.RespondWith(http.StatusOK, "{}"),
+				),
+			)
+
+			req, _ := http.NewRequest("GET", "/v2/any-endpoint", nil)
+			req.Host = "example.com"
+
+			w := httptest.NewRecorder()
+			handler := proxyBroker.ReverseProxy()
+			handler.ServeHTTP(w, req)
+
+			Expect(brokerServer.ReceivedRequests()[0].Host).Should(Equal(brokerURL.Host))
 		})
 	})
 })

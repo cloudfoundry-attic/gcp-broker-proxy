@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
@@ -108,6 +109,46 @@ var _ = Describe("GCP Broker Proxy", func() {
 			})
 		})
 
+		Context("when using correct credentials", func() {
+			var req *http.Request
+
+			BeforeEach(func() {
+				var err error
+				body := strings.NewReader("{'data': 'for gcp'}")
+				req, err = http.NewRequest("PUT", "http://localhost:"+envs.port+"/v2/any-endpoint?query=param", body)
+				req.Header.Set("Accept", "application/json")
+				req.SetBasicAuth(envs.username, envs.password)
+				Expect(err).NotTo(HaveOccurred())
+
+				gcpOAuthServer.AppendHandlers(
+					http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						fmt.Fprint(w, `{"access_token": "123"}`)
+					}),
+				)
+			})
+
+			It("proxies the request with a bearer token", func() {
+				brokerServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("PUT", "/v2/any-endpoint", "query=param"),
+						ghttp.VerifyHeaderKV("Accept", "application/json"),
+						ghttp.VerifyHeaderKV("Authorization", "Bearer 123"),
+						ghttp.VerifyBody([]byte("{'data': 'for gcp'}")),
+						ghttp.RespondWith(http.StatusOK, "{}"),
+					),
+				)
+
+				Eventually(func() int {
+					client := &http.Client{}
+					res, err := client.Do(req)
+					if err != nil {
+						return -1
+					}
+					return res.StatusCode
+				}).Should(Equal(200))
+			})
+		})
+
 		Context("when using incorrect credentials", func() {
 			It("responds with 401", func() {
 				Eventually(func() int {
@@ -117,54 +158,6 @@ var _ = Describe("GCP Broker Proxy", func() {
 					}
 					return res.StatusCode
 				}).Should(Equal(401))
-			})
-		})
-
-		Context("when using correct credentials", func() {
-			BeforeEach(func() {
-				brokerServer.AppendHandlers(
-					ghttp.VerifyRequest("GET", "/v2/some-broker-endpoint"),
-				)
-				gcpOAuthServer.AppendHandlers(
-					http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						fmt.Fprint(w, `{"access_token": "123"}`)
-					}),
-				)
-			})
-
-			Context("and the request is proxied to the broker", func() {
-				var req *http.Request
-
-				BeforeEach(func() {
-					var err error
-					req, err = http.NewRequest("GET", "http://localhost:"+envs.port+"/v2/some-broker-endpoint", nil)
-					Expect(err).NotTo(HaveOccurred())
-					req.SetBasicAuth(envs.username, envs.password)
-				})
-
-				It("proxies the correct path", func() {
-					Eventually(func() int {
-						client := &http.Client{}
-						res, err := client.Do(req)
-						if err != nil {
-							return -1
-						}
-						return res.StatusCode
-					}).Should(Equal(200))
-					Expect(brokerServer.ReceivedRequests()).Should(HaveLen(2))
-				})
-
-				It("proxies with a bearer token", func() {
-					Eventually(func() int {
-						client := &http.Client{}
-						res, err := client.Do(req)
-						if err != nil {
-							return -1
-						}
-						return res.StatusCode
-					}).Should(Equal(200))
-					Expect(brokerServer.ReceivedRequests()[1].Header.Get("Authorization")).Should(Equal("Bearer 123"))
-				})
 			})
 		})
 	})
