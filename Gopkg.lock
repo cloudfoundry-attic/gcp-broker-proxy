@@ -34,7 +34,7 @@ memo = "d4c960817f028e927b2de6dc7492d7f9c5ad244b9c6f4f0528655b4272f5b97b"
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","html","html/atom","html/charset"]
-  revision = "b68f30494add4df6bd8ef5e82803f308e7f7c59c"
+  revision = "b3c676e531a6dc479fa1b35ac961c13f5e2b4d2e"
 
 [[projects]]
   branch = "master"
@@ -46,7 +46,7 @@ memo = "d4c960817f028e927b2de6dc7492d7f9c5ad244b9c6f4f0528655b4272f5b97b"
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "378d26f46672a356c46195c28f61bdb4c0a781dd"
+  revision = "1d206c9fa8975fb4cf00df1dc8bf3283dc24ba0e"
 
 [[projects]]
   name = "golang.org/x/text"
