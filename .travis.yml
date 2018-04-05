@@ -4,3 +4,7 @@ go:
   - "1.x"
 
 go_import_path: code.cloudfoundry.org/gcp-broker-proxy
+
+install:
+  - go install github.com/onsi/ginkgo/ginkgo
+  - export PATH=$PATH:$HOME/gopath/bin
