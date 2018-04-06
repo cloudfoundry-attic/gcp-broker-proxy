@@ -1,6 +1,8 @@
 package token
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/urfave/negroni"
@@ -18,7 +20,10 @@ func TokenHandler(tr TokenRetriever) negroni.HandlerFunc {
 		token, err := tr.GetToken()
 		if err != nil {
 			w.WriteHeader(http.StatusBadGateway)
-			w.Write([]byte("Error retrieving OAuth token"))
+
+			msg := fmt.Sprintf("Error retrieving OAuth token: %s", err.Error())
+			log.Println(msg)
+			w.Write([]byte(msg))
 			return
 		}
 

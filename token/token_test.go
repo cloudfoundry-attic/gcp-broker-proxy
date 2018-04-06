@@ -1,9 +1,12 @@
 package token_test
 
 import (
+	"bytes"
 	"errors"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 
 	"golang.org/x/oauth2"
 
@@ -12,6 +15,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/urfave/negroni"
 )
 
 var _ = Describe("TokenHandler", func() {
@@ -46,36 +50,43 @@ var _ = Describe("TokenHandler", func() {
 	})
 
 	Context("when getting the token fails", func() {
+		var (
+			writer       = httptest.NewRecorder()
+			buf          bytes.Buffer
+			tokenHandler negroni.HandlerFunc
+		)
+
 		BeforeEach(func() {
+			log.SetOutput(&buf)
 			tokenRetrieverFake = new(tokenfakes.FakeTokenRetriever)
 			tokenRetrieverFake.GetTokenReturns(nil, errors.New("oops"))
+			tokenHandler = token.TokenHandler(tokenRetrieverFake)
+		})
+
+		AfterEach(func() {
+			log.SetOutput(os.Stderr)
 		})
 
 		It("should not call the given handler", func() {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				Fail("This should not have been called")
 			})
-
-			tokenHandler := token.TokenHandler(tokenRetrieverFake)
-			writer := httptest.NewRecorder()
-
 			tokenHandler(writer, req, handler)
 		})
 
 		It("responds with a 502 Bad Gateway", func() {
-			tokenHandler := token.TokenHandler(tokenRetrieverFake)
-			writer := httptest.NewRecorder()
-
 			tokenHandler(writer, req, noOpHandler)
 			Expect(writer.Code).To(Equal(502))
 		})
 
 		It("responds with a user facing error message", func() {
-			tokenHandler := token.TokenHandler(tokenRetrieverFake)
-			writer := httptest.NewRecorder()
-
 			tokenHandler(writer, req, noOpHandler)
-			Expect(writer.Body.String()).To(Equal("Error retrieving OAuth token"))
+			Expect(writer.Body.String()).To(Equal("Error retrieving OAuth token: oops"))
+		})
+
+		It("logs the error", func() {
+			tokenHandler(writer, req, noOpHandler)
+			Expect(buf.String()).To(ContainSubstring("Error retrieving OAuth token: oops"))
 		})
 	})
 })
