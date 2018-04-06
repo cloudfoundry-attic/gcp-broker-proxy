@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/gcp-broker-proxy/auth"
 	"code.cloudfoundry.org/gcp-broker-proxy/oauth"
 	"code.cloudfoundry.org/gcp-broker-proxy/proxy"
+	"code.cloudfoundry.org/gcp-broker-proxy/startupchecker"
 	"code.cloudfoundry.org/gcp-broker-proxy/token"
 )
 
@@ -36,16 +37,16 @@ func main() {
 
 	client := http.Client{}
 
-	proxy := proxy.NewProxy(brokerURL, tokenFetcher, &client)
+	startupChecker := startupchecker.NewChecker(brokerURL, tokenFetcher, &client)
 
-	err = proxy.PerformStartupChecks()
+	err = startupChecker.Perform()
 	if err != nil {
 		log.Fatal("Failed startup checks: " + err.Error())
 	}
 	fmt.Println("Startup checks passed")
 
 	basicAuth := auth.BasicAuth(username, password)
-	reverseProxy := proxy.ReverseProxy()
+	reverseProxy := proxy.ReverseProxy(brokerURL)
 	tokenHandler := token.TokenHandler(tokenFetcher)
 
 	n := negroni.New()
