@@ -13,16 +13,7 @@ to be registered in CloudFoundry.
 ```
 go get -u code.cloudfoundry.org/gcp-broker-proxy
 ```
-1. Dog
-   1. German Shepherd
-   1. Belgian Shepherd
-       1. Malinois
-       1. Groenendael
-       1. Tervuren
-1. Cat
-   1. Siberian
-   1. Siamese
-   
+
 ### Deploying to Cloud Foundry
 1. Install the Google Cloud Platform (GCP) tools
    1. `gcloud components install beta`
@@ -31,11 +22,6 @@ go get -u code.cloudfoundry.org/gcp-broker-proxy
    1. `gcloud auth application-default login`
 1. Install the customized Google Service Catalog (SC) tool (temporarily a fork)
    1. `go get -u github.com/GoogleCloudPlatform/k8s-service-catalog/installer/cmd/sc`
-   1. `cd $GOPATH/src/github.com/GoogleCloudPlatform/k8s-service-catalog`
-   1. `git remote add fork git@github.com:martinmaly/k8s-service-catalog`
-   1. `git fetch fork`
-   1. `git co advanced`
-   1. `go install github.com/GoogleCloudPlatform/k8s-service-catalog/installer/cmd/sc`
 1. Use the SC tool to enable the Google Hosted Broker
    1. `sc advanced create-gcp-broker`
    1. Take note of the broker URL.
