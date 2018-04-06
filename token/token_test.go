@@ -51,16 +51,19 @@ var _ = Describe("TokenHandler", func() {
 
 	Context("when getting the token fails", func() {
 		var (
-			writer       = httptest.NewRecorder()
+			writer       *httptest.ResponseRecorder
 			buf          bytes.Buffer
 			tokenHandler negroni.HandlerFunc
 		)
 
 		BeforeEach(func() {
-			log.SetOutput(&buf)
+			writer = httptest.NewRecorder()
+
 			tokenRetrieverFake = new(tokenfakes.FakeTokenRetriever)
 			tokenRetrieverFake.GetTokenReturns(nil, errors.New("oops"))
 			tokenHandler = token.TokenHandler(tokenRetrieverFake)
+
+			log.SetOutput(&buf)
 		})
 
 		AfterEach(func() {
