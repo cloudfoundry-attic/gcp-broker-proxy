@@ -34,8 +34,7 @@ func NewChecker(brokerURL *url.URL, tr TokenRetriever, httpDoer HTTPDoer) Checke
 	}
 }
 
-// 1. Should this be part of the proxy?
-// 2. Once the proxy is setup can we just call ourselves?
+// 1. Once the proxy is setup can we just call ourselves?
 func (s *Checker) Perform() error {
 	token, err := s.tokenRetriever.GetToken()
 	if err != nil {
