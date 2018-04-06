@@ -152,6 +152,24 @@ var _ = Describe("GCP Broker Proxy", func() {
 				Expect(string(body)).To(Equal(`{"data": "from broker"}`))
 				Expect(string(res.Header.Get("Content-Type"))).To(Equal("application/json"))
 			})
+
+			It("logs the request and broker response", func() {
+				Eventually(session).Should(Say("About to listen on port " + envs.port))
+
+				brokerServer.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("PUT", "/v2/any-endpoint", "query=param"),
+						ghttp.RespondWith(http.StatusOK, "{}"),
+					),
+				)
+
+				client := &http.Client{}
+				_, err := client.Do(req)
+				Expect(err).ToNot(HaveOccurred())
+
+				Eventually(session).Should(Say("200"))
+				Eventually(session).Should(Say("PUT /v2/any-endpoint query=param"))
+			})
 		})
 
 		Context("when using incorrect credentials", func() {

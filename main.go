@@ -50,10 +50,14 @@ func main() {
 	tokenHandler := token.TokenHandler(tokenFetcher)
 
 	n := negroni.New()
-	n.Use(negroni.NewLogger())
+
+	logger := negroni.NewLogger()
+	logger.SetFormat("Proxy response {{.Status}} | {{.Method}} {{.Path}} {{.Request.URL.RawQuery}} | \t {{.Duration}} \n")
+
 	n.Use(basicAuth)
 	n.Use(tokenHandler)
 	n.Use(reverseProxy)
+	n.Use(logger)
 
 	fmt.Printf("About to listen on port %s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, n))
