@@ -20,7 +20,7 @@ go get -u code.cloudfoundry.org/gcp-broker-proxy
    1. `gcloud components install kubectl`
    1. `gcloud auth login`
    1. `gcloud auth application-default login`
-1. Install the customized Google Service Catalog (SC) tool (temporarily a fork)
+1. Install the customized Google Service Catalog (SC) tool
    1. `go get -u github.com/GoogleCloudPlatform/k8s-service-catalog/installer/cmd/sc`
 1. Use the SC tool to enable the Google Hosted Broker
    1. `sc advanced create-gcp-broker`
