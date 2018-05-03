@@ -1,13 +1,14 @@
 # Google Cloud Platform Proxy Service Broker
 [![Build Status](https://travis-ci.org/cloudfoundry-incubator/gcp-broker-proxy.svg?branch=master)](https://travis-ci.org/cloudfoundry-incubator/gcp-broker-proxy)
 
-### Warning: This proxy will not function until async bindings are supported in Cloud Foundry. Access to the Google Hosted Service Broker Early Access Program (EAP) is also required.
+### Warning: This proxy will not function until async bindings are supported in Cloud Foundry.
 
 **Note**: This repository should be imported as code.cloudfoundry.org/gcp-broker-proxy.
 
 
-This broker proxies requests to Google's hosted service broker. It handles the OAuth flow and allows the Google Cloud
-Hosted Service Broker to be registered in Cloud Foundry.
+This broker proxies requests to Google's hosted service broker. It handles the OAuth flow and allows the
+[Google Cloud Platform Service Broker](https://cloud.google.com/kubernetes-engine/docs/concepts/add-on/service-broker)
+to be registered in Cloud Foundry.
 
 ### Installation
 ```
