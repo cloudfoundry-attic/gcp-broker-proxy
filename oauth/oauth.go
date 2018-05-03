@@ -14,7 +14,8 @@ var (
 )
 
 type GCPOAuth struct {
-	jwt *jwt.Config
+	jwt   *jwt.Config
+	token *oauth2.Token
 }
 
 func NewGCPOAuth(serviceAccountJSON string) (*GCPOAuth, error) {
@@ -25,22 +26,24 @@ func NewGCPOAuth(serviceAccountJSON string) (*GCPOAuth, error) {
 		return nil, err
 	}
 
-	oauth := GCPOAuth{jwt}
+	oauth := GCPOAuth{jwt, nil}
 
 	return &oauth, nil
 }
 
 func (o *GCPOAuth) GetToken() (*oauth2.Token, error) {
-	var token *oauth2.Token
-	token, err := o.jwt.TokenSource(context.Background()).Token()
+	tokenSource := oauth2.ReuseTokenSource(o.token, o.jwt.TokenSource(context.Background()))
+
+	var err error
+	o.token, err = tokenSource.Token()
 
 	if err != nil {
-		return token, err
+		return o.token, err
 	}
 
-	if token.AccessToken == "" {
+	if o.token.AccessToken == "" {
 		return nil, errors.New("Missing access_token in oauth response")
 	}
 
-	return token, err
+	return o.token, err
 }

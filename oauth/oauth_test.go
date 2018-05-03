@@ -73,6 +73,16 @@ var _ = Describe("GCPOAuth", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(token.AccessToken).To(Equal("123"))
 			})
+
+			It("should reuse it on every subsequent call", func() {
+				token, _ := oauth.GetToken()
+
+				responseFromOAuthServer = `{"access_token": "456"}`
+
+				token, err := oauth.GetToken()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(token.AccessToken).To(Equal("123"))
+			})
 		})
 
 		Context("When unable to get a token", func() {
