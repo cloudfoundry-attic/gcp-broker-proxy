@@ -36,6 +36,9 @@ go get -u code.cloudfoundry.org/gcp-broker-proxy
 1. Run `cf apps` and take note of the pushed application's URL
 1. `cf create-service-broker gcp-broker <username> <password> <app_url>`
 
+### Contributing
+The Cloud Foundry team uses GitHub and accepts contributions via pull request.
+
 ### Development
 
 #### Test
