@@ -144,16 +144,6 @@ func TestQueryToProto(t *testing.T) {
 			want: &pb.StructuredQuery{Where: filtr([]string{"a"}, ">", 5)},
 		},
 		{
-			desc: `q.Where("a", "==", nil)`,
-			in:   q.Where("a", "==", nil),
-			want: &pb.StructuredQuery{Where: filtr([]string{"a"}, "==", nil)},
-		},
-		{
-			desc: `q.Where("a", "==", NaN)`,
-			in:   q.Where("a", "==", math.NaN()),
-			want: &pb.StructuredQuery{Where: filtr([]string{"a"}, "==", math.NaN())},
-		},
-		{
 			desc: `q.Where("a", "==", NaN)`,
 			in:   q.Where("a", "==", float32(math.NaN())),
 			want: &pb.StructuredQuery{Where: filtr([]string{"a"}, "==", math.NaN())},
@@ -195,7 +185,7 @@ func TestQueryToProto(t *testing.T) {
 			in:   q.Offset(2).Limit(3),
 			want: &pb.StructuredQuery{
 				Offset: 2,
-				Limit:  &wrappers.Int32Value{3},
+				Limit:  &wrappers.Int32Value{Value: 3},
 			},
 		},
 		{
@@ -203,7 +193,7 @@ func TestQueryToProto(t *testing.T) {
 			in:   q.Offset(2).Limit(3).Limit(4).Offset(5), // last wins
 			want: &pb.StructuredQuery{
 				Offset: 5,
-				Limit:  &wrappers.Int32Value{4},
+				Limit:  &wrappers.Int32Value{Value: 4},
 			},
 		},
 		{
