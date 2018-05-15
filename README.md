@@ -30,7 +30,7 @@ go get -u code.cloudfoundry.org/gcp-broker-proxy
    1. Set the `USERNAME` & `PASSWORD` to the basic authentication credentials you use to register the proxy with Cloud Foundry.
    1. Set the `BROKER_URL` to the URL output by the SC tool.
    1. Set `SERVICE_ACCOUNT_JSON` to your [GCP Service account JSON](https://developers.google.com/identity/protocols/OAuth2ServiceAccount)
-      - We recommend the service account roles `Service Broker Admin` or `Service Broker Operator`
+      - We recommend the service account role `Service Broker Operator`
 1. `make build-linux`
 1. `cf push`
 1. Run `cf apps` and take note of the pushed application's URL
