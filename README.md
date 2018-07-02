@@ -39,6 +39,10 @@ go get -u code.cloudfoundry.org/gcp-broker-proxy
 ### Contributing
 The Cloud Foundry team uses GitHub and accepts contributions via pull request.
 
+### How to obtain support
+If you need any support, have any question or have found a bug, please report it in the [GitHub issue](https://github.com/cloudfoundry-incubator/gcp-broker-proxy/issues). You can also reach us out on our [Slack Channel](https://cloudfoundry.slack.com/messages/C5WH3RDLZ).
+
+
 ### Development
 
 #### Test
@@ -50,6 +54,15 @@ make test
 ```
 make build
 ```
+
+#### Built with
+
+* [Negroni](https://github.com/urfave/negroni)
+
+#### Tested with
+
+* [Gingko](https://github.com/onsi/ginkgo)
+* [Gomega](https://github.com/onsi/gomega)
 
 #### Dependencies 
 
