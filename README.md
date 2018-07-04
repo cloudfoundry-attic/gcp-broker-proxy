@@ -39,8 +39,9 @@ go get -u code.cloudfoundry.org/gcp-broker-proxy
 ### Contributing
 The Cloud Foundry team uses GitHub and accepts contributions via pull request.
 
-### How to obtain support
-If you need any support, have any question or have found a bug, please report it in the [GitHub issue](https://github.com/cloudfoundry-incubator/gcp-broker-proxy/issues). You can also reach us out on our [Slack Channel](https://cloudfoundry.slack.com/messages/C5WH3RDLZ).
+### Need help?
+If you need any help, have any questions or have found a bug, please open a [GitHub issue](https://github.com/cloudfoundry-incubator/gcp-broker-proxy/issues) in this project.
+You can also reach the Cloud Foundry Services API team who maintain this through our [Slack Channel](https://cloudfoundry.slack.com/messages/C5WH3RDLZ).
 
 
 ### Development
